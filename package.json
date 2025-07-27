@@ -21,7 +21,6 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.3",
-    "oracledb": "^4.2.0",
     "pg": "^8.13.1",
     "vercel": "^39.2.2"
   },
