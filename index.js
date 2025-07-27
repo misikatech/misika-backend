@@ -2,8 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
-const pool = require('./config/db'); // Database configuration file
-const masterRouter = require('./routes/masterRoutes');
+const pool = require('./config/db'); 
+
 
 // Initialize Express app
 const app = express();
@@ -19,7 +19,7 @@ app.use(cors({
 
 // API Routes
 app.use('/api', userRoutes);
-app.use('/api', masterRouter);
+
 
 // Start the server
 app.listen(port, () => {
