@@ -11,16 +11,15 @@ const getProfile = asyncHandler(async (req, res) => {
     where: { id: req.user.id },
     select: {
       id: true,
-      firstName: true,
-      lastName: true,
+      username: true,
       email: true,
-      phone: true,
-      role: true,
-      isVerified: true,
-      createdAt: true,
-      updatedAt: true,
+      created_at: true,
     },
   });
+
+  if (!user) {
+    return ApiResponse.error(res, 'User not found', 404);
+  }
 
   ApiResponse.success(res, user, 'Profile fetched successfully');
 });
@@ -29,25 +28,19 @@ const getProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  Private
 const updateProfile = asyncHandler(async (req, res) => {
-  const { firstName, lastName, phone } = req.body;
+  const { username, email } = req.body;
 
   const user = await prisma.user.update({
     where: { id: req.user.id },
     data: {
-      firstName,
-      lastName,
-      phone,
+      username,
+      email,
     },
     select: {
       id: true,
-      firstName: true,
-      lastName: true,
+      username: true,
       email: true,
-      phone: true,
-      role: true,
-      isVerified: true,
-      createdAt: true,
-      updatedAt: true,
+      created_at: true,
     },
   });
 
@@ -60,21 +53,21 @@ const updateProfile = asyncHandler(async (req, res) => {
 const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
-  // Get user with password
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
   });
 
-  // Check current password
+  if (!user) {
+    return ApiResponse.error(res, 'User not found', 404);
+  }
+
   const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
   if (!isCurrentPasswordValid) {
     return ApiResponse.error(res, 'Current password is incorrect', 400);
   }
 
-  // Hash new password
   const hashedNewPassword = await bcrypt.hash(newPassword, 12);
 
-  // Update password
   await prisma.user.update({
     where: { id: req.user.id },
     data: { password: hashedNewPassword },
@@ -89,15 +82,14 @@ const changePassword = asyncHandler(async (req, res) => {
 const getDashboard = asyncHandler(async (req, res) => {
   const userId = req.user.id;
 
-  // Get user stats
+  // Simulate if orders/carts/wishlist tables don't yet exist
   const [orderCount, cartItemCount, wishlistCount] = await Promise.all([
-    prisma.order.count({ where: { userId } }),
-    prisma.cartItem.count({ where: { userId } }),
-    prisma.wishlistItem.count({ where: { userId } }),
+    prisma.order?.count({ where: { userId } }) ?? 0,
+    prisma.cartItem?.count({ where: { userId } }) ?? 0,
+    prisma.wishlistItem?.count({ where: { userId } }) ?? 0,
   ]);
 
-  // Get recent orders
-  const recentOrders = await prisma.order.findMany({
+  const recentOrders = await prisma.order?.findMany({
     where: { userId },
     take: 5,
     orderBy: { createdAt: 'desc' },
@@ -113,7 +105,7 @@ const getDashboard = asyncHandler(async (req, res) => {
         },
       },
     },
-  });
+  }) ?? [];
 
   const stats = {
     totalOrders: orderCount,

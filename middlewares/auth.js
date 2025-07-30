@@ -4,12 +4,16 @@ const ApiResponse = require('../utils/ApiResponse');
 
 const prisma = new PrismaClient();
 
+// Middleware to protect routes
 const protect = async (req, res, next) => {
   try {
     let token;
 
-    // Get token from header
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    // Check for Bearer token
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
       token = req.headers.authorization.split(' ')[1];
     }
 
@@ -17,43 +21,34 @@ const protect = async (req, res, next) => {
       return ApiResponse.error(res, 'Not authorized, no token', 401);
     }
 
-    try {
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Get user from token
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          role: true,
-          isVerified: true,
-        },
-      });
-
-      if (!user) {
-        return ApiResponse.error(res, 'Not authorized, user not found', 401);
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        created_at: true
       }
+    });
 
-      req.user = user;
-      next();
-    } catch (error) {
-      return ApiResponse.error(res, 'Not authorized, token failed', 401);
+    if (!user) {
+      return ApiResponse.error(res, 'Not authorized, user not found', 401);
     }
+
+    req.user = user;
+    next();
   } catch (error) {
-    return ApiResponse.error(res, 'Server error in auth middleware', 500);
+    return ApiResponse.error(res, 'Not authorized, token failed', 401);
   }
 };
 
+// Role-based access middleware (disabled safely if no roles exist)
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return ApiResponse.error(res, 'Not authorized for this resource', 403);
-    }
-    next();
+    // This will always fail if user.role doesn't exist
+    return ApiResponse.error(res, 'Role-based access not configured', 501);
   };
 };
 

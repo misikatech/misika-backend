@@ -8,23 +8,18 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  password    String
-  firstName   String
-  lastName    String
-  phone       String?
-  role        Role     @default(USER)
-  isVerified  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  username   String   @unique
+  email      String   @unique
+  password   String
+  created_at DateTime @default(now())
 
   // Relations
-  addresses   Address[]
-  orders      Order[]
-  cart        CartItem[]
-  reviews     Review[]
-  wishlist    WishlistItem[]
+  addresses     Address[]
+  cartItems     CartItem[]
+  orders        Order[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
 
   @@map("users")
 }

@@ -2,7 +2,11 @@ const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiResponse = require('../utils/ApiResponse');
-const { generateToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt');
+const {
+  generateToken,
+  generateRefreshToken,
+  verifyRefreshToken
+} = require('../utils/jwt');
 
 const prisma = new PrismaClient();
 
@@ -10,47 +14,42 @@ const prisma = new PrismaClient();
 // @route   POST /api/auth/register
 // @access  Public
 const register = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone } = req.body;
+  const { username, email, password } = req.body;
 
-  // Check if user exists
+  // Check if user already exists
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     return ApiResponse.error(res, 'User already exists with this email', 400);
   }
 
-  // Hash password
+  // Hash the password
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  // Create user
+  // Create the new user
   const user = await prisma.user.create({
     data: {
-      firstName,
-      lastName,
+      username,
       email,
-      password: hashedPassword,
-      phone,
+      password: hashedPassword
     },
     select: {
       id: true,
-      firstName: true,
-      lastName: true,
+      username: true,
       email: true,
-      phone: true,
-      role: true,
-      isVerified: true,
-      createdAt: true,
-    },
+      created_at: true
+    }
   });
 
   // Generate tokens
   const accessToken = generateToken(user.id);
   const refreshToken = generateRefreshToken(user.id);
 
-  ApiResponse.success(res, {
-    user,
-    accessToken,
-    refreshToken,
-  }, 'User registered successfully', 201);
+  ApiResponse.success(
+    res,
+    { user, accessToken, refreshToken },
+    'User registered successfully',
+    201
+  );
 });
 
 // @desc    Login user
@@ -59,30 +58,26 @@ const register = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // Check if user exists
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     return ApiResponse.error(res, 'Invalid credentials', 401);
   }
 
-  // Check password
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     return ApiResponse.error(res, 'Invalid credentials', 401);
   }
 
-  // Generate tokens
   const accessToken = generateToken(user.id);
   const refreshToken = generateRefreshToken(user.id);
 
-  // Remove password from response
   const { password: _, ...userWithoutPassword } = user;
 
-  ApiResponse.success(res, {
-    user: userWithoutPassword,
-    accessToken,
-    refreshToken,
-  }, 'Login successful');
+  ApiResponse.success(
+    res,
+    { user: userWithoutPassword, accessToken, refreshToken },
+    'Login successful'
+  );
 });
 
 // @desc    Refresh token
@@ -97,16 +92,15 @@ const refreshToken = asyncHandler(async (req, res) => {
 
   try {
     const decoded = verifyRefreshToken(token);
+
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
       select: {
         id: true,
-        firstName: true,
-        lastName: true,
+        username: true,
         email: true,
-        role: true,
-        isVerified: true,
-      },
+        createdAt: true
+      }
     });
 
     if (!user) {
@@ -116,11 +110,11 @@ const refreshToken = asyncHandler(async (req, res) => {
     const newAccessToken = generateToken(user.id);
     const newRefreshToken = generateRefreshToken(user.id);
 
-    ApiResponse.success(res, {
-      user,
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-    }, 'Token refreshed successfully');
+    ApiResponse.success(
+      res,
+      { user, accessToken: newAccessToken, refreshToken: newRefreshToken },
+      'Token refreshed successfully'
+    );
   } catch (error) {
     return ApiResponse.error(res, 'Invalid refresh token', 401);
   }
@@ -137,7 +131,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     return ApiResponse.error(res, 'User not found with this email', 404);
   }
 
-  // In a real implementation, you'd send an email with reset token
+  // Simulate sending a reset email (to be implemented)
   ApiResponse.success(res, null, 'Password reset email sent');
 });
 
@@ -147,7 +141,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 const resetPassword = asyncHandler(async (req, res) => {
   const { token, password } = req.body;
 
-  // In a real implementation, you'd verify the token against the database
+  // Simulate verifying token and updating password (to be implemented)
   ApiResponse.success(res, null, 'Password reset successful');
 });
 
@@ -155,7 +149,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/logout
 // @access  Private
 const logout = asyncHandler(async (req, res) => {
-  // In a stateless JWT implementation, logout is handled client-side
+  // JWT logout is client-side
   ApiResponse.success(res, null, 'Logout successful');
 });
 
@@ -165,5 +159,5 @@ module.exports = {
   refreshToken,
   forgotPassword,
   resetPassword,
-  logout,
+  logout
 };

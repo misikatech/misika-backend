@@ -1,12 +1,10 @@
 const Joi = require('joi');
 
 const registerSchema = Joi.object({
-  firstName: Joi.string().required().min(2).max(50),
-  lastName: Joi.string().required().min(2).max(50),
+  username: Joi.string().required().min(2).max(50),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  phone: Joi.string().pattern(/^[0-9]{10}$/).required(),
-  acceptTerms: Joi.boolean().valid(true).required()
+  acceptTerms: Joi.boolean().valid(true).optional()
 });
 
 const loginSchema = Joi.object({
