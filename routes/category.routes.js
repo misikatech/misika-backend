@@ -6,4 +6,8 @@ router.get('/', (req, res) => {
   res.json({ success: true, message: 'Categories list endpoint - to be implemented' });
 });
 
+router.post('/', (req, res) => {
+  res.json({ success: true, message: 'Create category endpoint - to be implemented' });
+});
+
 module.exports = router;

@@ -10,4 +10,8 @@ router.get('/:id', (req, res) => {
   res.json({ success: true, message: 'Product detail endpoint - to be implemented' });
 });
 
+router.post('/', (req, res) => {
+  res.json({ success: true, message: 'Create product endpoint - to be implemented' });
+});
+
 module.exports = router;
