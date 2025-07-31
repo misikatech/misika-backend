@@ -44,4 +44,15 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+// Middleware to check admin role
+const admin = (req, res, next) => {
+  // For now, we'll check if the user email contains 'admin'
+  // This should be replaced with a proper role-based system
+  if (req.user && req.user.email && req.user.email.includes('admin')) {
+    next();
+  } else {
+    return ApiResponse.error(res, 'Not authorized as admin', 403);
+  }
+};
+
+module.exports = { protect, admin };

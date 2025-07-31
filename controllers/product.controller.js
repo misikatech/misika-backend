@@ -47,9 +47,6 @@ const getProducts = asyncHandler(async (req, res) => {
       include: {
         category: {
           select: { name: true, slug: true }
-        },
-        reviews: {
-          select: { rating: true }
         }
       },
       skip,
@@ -59,14 +56,11 @@ const getProducts = asyncHandler(async (req, res) => {
     prisma.product.count({ where })
   ]);
 
-  // Calculate average rating for each product
+  // Add default rating values for products
   const productsWithRating = products.map(product => ({
     ...product,
-    averageRating: product.reviews.length > 0 
-      ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length
-      : 0,
-    reviewCount: product.reviews.length,
-    reviews: undefined // Remove reviews from response
+    averageRating: 0,
+    reviewCount: 0
   }));
 
   const pagination = {
@@ -91,14 +85,6 @@ const getProduct = asyncHandler(async (req, res) => {
     include: {
       category: {
         select: { name: true, slug: true }
-      },
-      reviews: {
-        include: {
-          user: {
-            select: { firstName: true, lastName: true }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
       }
     }
   });
@@ -107,15 +93,11 @@ const getProduct = asyncHandler(async (req, res) => {
     return ApiResponse.error(res, 'Product not found', 404);
   }
 
-  // Calculate average rating
-  const averageRating = product.reviews.length > 0 
-    ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length
-    : 0;
-
+  // Add default rating values
   const productWithRating = {
     ...product,
-    averageRating,
-    reviewCount: product.reviews.length
+    averageRating: 0,
+    reviewCount: 0
   };
 
   ApiResponse.success(res, productWithRating, 'Product fetched successfully');

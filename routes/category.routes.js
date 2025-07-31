@@ -1,13 +1,17 @@
 const express = require('express');
+const { getCategories, createCategory } = require('../controllers/category.controller');
+const { protect, admin } = require('../middlewares/auth');
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  res.json({ success: true, message: 'Categories list endpoint - to be implemented' });
-});
+// @route   GET /api/categories
+// @desc    Get all categories
+// @access  Public
+router.get('/', getCategories);
 
-router.post('/', (req, res) => {
-  res.json({ success: true, message: 'Create category endpoint - to be implemented' });
-});
+// @route   POST /api/categories
+// @desc    Create a new category
+// @access  Private/Admin
+router.post('/', protect, admin, createCategory);
 
 module.exports = router;
