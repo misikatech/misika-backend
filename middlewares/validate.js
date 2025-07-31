@@ -2,11 +2,16 @@ const ApiResponse = require('../utils/ApiResponse');
 
 const validate = (schema) => {
   return (req, res, next) => {
-    const { error } = schema.validate(req.body);
+    const { error } = schema.validate(req.body, { abortEarly: false });
     
     if (error) {
-      const errorMessage = error.details[0].message;
-      return ApiResponse.error(res, errorMessage, 400);
+      const errors = {};
+      error.details.forEach((detail) => {
+        const key = detail.path.join('.');
+        errors[key] = detail.message;
+      });
+      
+      return ApiResponse.error(res, 'Validation failed', 400, errors);
     }
     
     next();

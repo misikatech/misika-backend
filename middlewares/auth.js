@@ -44,12 +44,4 @@ const protect = async (req, res, next) => {
   }
 };
 
-// Role-based access middleware (disabled safely if no roles exist)
-const authorize = (...roles) => {
-  return (req, res, next) => {
-    // This will always fail if user.role doesn't exist
-    return ApiResponse.error(res, 'Role-based access not configured', 501);
-  };
-};
-
-module.exports = { protect, authorize };
+module.exports = { protect };

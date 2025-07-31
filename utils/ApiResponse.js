@@ -4,7 +4,7 @@ class ApiResponse {
       success: true,
       message,
       data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -13,7 +13,7 @@ class ApiResponse {
       success: false,
       message,
       errors,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }
