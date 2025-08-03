@@ -36,9 +36,28 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Logging middleware
+// Custom logging middleware for cleaner output
 if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+  app.use((req, res, next) => {
+    const start = Date.now();
+
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      const status = res.statusCode;
+      const method = req.method;
+      const url = req.originalUrl;
+
+      // Only log API requests, skip static files and health checks
+      if (url.startsWith('/api') && url !== '/api/health') {
+        const statusColor = status >= 400 ? '🔴' : status >= 300 ? '🟡' : '🟢';
+        const methodColor = method === 'GET' ? '📖' : method === 'POST' ? '📝' : method === 'PUT' ? '✏️' : method === 'DELETE' ? '🗑️' : '📋';
+
+        console.log(`${statusColor} ${methodColor} ${method} ${url} - ${status} (${duration}ms)`);
+      }
+    });
+
+    next();
+  });
 }
 
 // Health check endpoint
@@ -77,24 +96,32 @@ app.use(errorHandler);
 
 // Start server
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.clear(); // Clear terminal for clean output
+  console.log('\n🚀 Misika Backend Server');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`🌐 Server: http://localhost:${PORT}`);
+  console.log(`🔗 API Base: http://localhost:${PORT}/api`);
+  console.log(`📊 Health: http://localhost:${PORT}/health`);
+  console.log(`🎯 Frontend: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('✅ Server ready - Watching for changes...\n');
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
+  console.log('\n🛑 Shutting down server gracefully...');
   server.close(() => {
-    console.log('Process terminated');
+    console.log('✅ Server closed successfully\n');
+    process.exit(0);
   });
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
+  console.log('\n🛑 Shutting down server gracefully...');
   server.close(() => {
-    console.log('Process terminated');
+    console.log('✅ Server closed successfully\n');
+    process.exit(0);
   });
 });
 
