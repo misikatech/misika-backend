@@ -25,6 +25,29 @@ model User {
   @@map("users")
 }
 
+model UserQuery {
+  id            Int      @id @default(autoincrement())
+  name          String
+  mobile_number String
+  email         String   @unique
+  city          String
+  password      String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("userquery")
+}
+
+model OtpVerification {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  otp        String
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  @@map("otp_verifications")
+}
+
 model Category {
   id          String    @id @default(uuid())
   name        String    @unique

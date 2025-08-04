@@ -8,6 +8,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth.routes');
 const categoryRoutes = require('./routes/category.routes');
 const productRoutes = require('./routes/product.routes');
+const userRoutes = require('./routes/userRoutes');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
@@ -74,6 +75,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/users', userRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -86,6 +88,7 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       categories: '/api/categories',
       products: '/api/products',
+      users: '/api/users',
     },
   });
 });

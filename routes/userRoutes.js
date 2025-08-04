@@ -1,12 +1,24 @@
 
 
 
-const express = require('express');
-const { registerUser, loginUser } = require('../controllers/userController');
+const express = require("express");
+const { sendOtpAndCheckEmail, verifyOtpAndSignup, loginUser, getUserByEmail, forgotPasswordRequest, resetPassword } = require("../controllers/userController");
 
-const router = express.Router();
+const uresRouter = express.Router();
 
-router.post('/signup', registerUser);
-router.post('/login', loginUser);
+// Send OTP (If Email is New)
+uresRouter.post("/send-otp", sendOtpAndCheckEmail);
 
-module.exports = router;
+// Verify OTP & Signup User
+uresRouter.post("/verify-otp", verifyOtpAndSignup);
+
+uresRouter.post("/forgot-password", forgotPasswordRequest); // Step 1: Request OTP
+uresRouter.post("/reset-password", resetPassword); // Step 2: Verify OTP & Reset Password
+
+// Login User
+uresRouter.post("/login", loginUser);
+
+// Get User by Email
+uresRouter.get("/email/:email", getUserByEmail);
+
+module.exports = uresRouter;
