@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth.routes');
 const categoryRoutes = require('./routes/category.routes');
 const productRoutes = require('./routes/product.routes');
 const userRoutes = require('./routes/userRoutes');
+const statsRoutes = require('./routes/stats.routes');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
@@ -76,6 +77,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -89,6 +91,7 @@ app.get('/', (req, res) => {
       categories: '/api/categories',
       products: '/api/products',
       users: '/api/users',
+      stats: '/api/stats',
     },
   });
 });

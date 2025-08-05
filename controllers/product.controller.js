@@ -191,10 +191,167 @@ const deleteProduct = asyncHandler(async (req, res) => {
   ApiResponse.success(res, null, 'Product deleted successfully');
 });
 
+// @desc    Get products by category
+// @route   GET /api/products/category/:categorySlug
+// @access  Public
+const getProductsByCategory = asyncHandler(async (req, res) => {
+  const { categorySlug } = req.params;
+  const {
+    page = 1,
+    limit = 12,
+    minPrice,
+    maxPrice,
+    search,
+    sortBy = 'createdAt',
+    sortOrder = 'desc'
+  } = req.query;
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const where = {
+    isActive: true,
+    category: {
+      slug: categorySlug,
+      isActive: true
+    },
+    ...(minPrice || maxPrice) && {
+      price: {
+        ...(minPrice && { gte: parseFloat(minPrice) }),
+        ...(maxPrice && { lte: parseFloat(maxPrice) })
+      }
+    },
+    ...(search && {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ]
+    })
+  };
+
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      include: {
+        category: {
+          select: { name: true, slug: true }
+        }
+      },
+      skip,
+      take: parseInt(limit),
+      orderBy: { [sortBy]: sortOrder }
+    }),
+    prisma.product.count({ where })
+  ]);
+
+  // Add default rating values for products
+  const productsWithRating = products.map(product => ({
+    ...product,
+    averageRating: 0,
+    reviewCount: 0
+  }));
+
+  const pagination = {
+    currentPage: parseInt(page),
+    totalPages: Math.ceil(total / parseInt(limit)),
+    totalItems: total,
+    hasNext: parseInt(page) < Math.ceil(total / parseInt(limit)),
+    hasPrev: parseInt(page) > 1
+  };
+
+  ApiResponse.paginated(res, productsWithRating, pagination, `Products in category '${categorySlug}' fetched successfully`);
+});
+
+// @desc    Get featured products
+// @route   GET /api/products/featured
+// @access  Public
+const getFeaturedProducts = asyncHandler(async (req, res) => {
+  const { limit = 8 } = req.query;
+
+  const products = await prisma.product.findMany({
+    where: {
+      isFeatured: true,
+      isActive: true
+    },
+    include: {
+      category: {
+        select: { name: true, slug: true }
+      }
+    },
+    take: parseInt(limit),
+    orderBy: { createdAt: 'desc' }
+  });
+
+  // Add default rating values for products
+  const productsWithRating = products.map(product => ({
+    ...product,
+    averageRating: 0,
+    reviewCount: 0
+  }));
+
+  ApiResponse.success(res, productsWithRating, 'Featured products fetched successfully');
+});
+
+// @desc    Search products
+// @route   GET /api/products/search
+// @access  Public
+const searchProducts = asyncHandler(async (req, res) => {
+  const { q: query, page = 1, limit = 12 } = req.query;
+
+  if (!query) {
+    return ApiResponse.error(res, 'Search query is required', 400);
+  }
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const where = {
+    isActive: true,
+    OR: [
+      { name: { contains: query, mode: 'insensitive' } },
+      { description: { contains: query, mode: 'insensitive' } },
+      { category: { name: { contains: query, mode: 'insensitive' } } }
+    ]
+  };
+
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      include: {
+        category: {
+          select: { name: true, slug: true }
+        }
+      },
+      skip,
+      take: parseInt(limit),
+      orderBy: { createdAt: 'desc' }
+    }),
+    prisma.product.count({ where })
+  ]);
+
+  // Add default rating values for products
+  const productsWithRating = products.map(product => ({
+    ...product,
+    averageRating: 0,
+    reviewCount: 0
+  }));
+
+  const pagination = {
+    currentPage: parseInt(page),
+    totalPages: Math.ceil(total / parseInt(limit)),
+    totalItems: total,
+    hasNext: parseInt(page) < Math.ceil(total / parseInt(limit)),
+    hasPrev: parseInt(page) > 1
+  };
+
+  ApiResponse.paginated(res, productsWithRating, pagination, `Search results for '${query}'`);
+});
+
 module.exports = {
   getProducts,
   getProduct,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getProductsByCategory,
+  getFeaturedProducts,
+  searchProducts
 };

@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const pool = require("../config/db");
 const nodemailer = require("nodemailer");
 const otpGenerator = require("otp-generator");
+const { generateToken, generateRefreshToken } = require('../utils/jwt');
 
 // Nodemailer transporter setup
 const transporter = nodemailer.createTransport({
@@ -120,36 +121,63 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+        timestamp: new Date().toISOString()
+      });
     }
 
     // Check if user exists
     const result = await pool.query("SELECT * FROM userquery WHERE email = $1", [email]);
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+        timestamp: new Date().toISOString()
+      });
     }
 
     const user = result.rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+        timestamp: new Date().toISOString()
+      });
     }
 
+    // Generate tokens
+    const accessToken = generateToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
     res.status(200).json({
+      success: true,
       message: "Login successful",
-      user: {
-        id: user.id,
-        name: user.name,
-        mobile_number: user.mobile_number,
-        email: user.email,
-        city: user.city
-      }
+      data: {
+        user: {
+          id: user.id,
+          name: user.name,
+          mobile_number: user.mobile_number,
+          email: user.email,
+          city: user.city
+        },
+        accessToken,
+        refreshToken
+      },
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error("Error during login:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 };
 

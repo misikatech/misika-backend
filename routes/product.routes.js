@@ -4,7 +4,10 @@ const {
   getProduct,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getProductsByCategory,
+  getFeaturedProducts,
+  searchProducts
 } = require('../controllers/product.controller');
 const { protect, admin } = require('../middlewares/auth');
 
@@ -14,6 +17,21 @@ const router = express.Router();
 // @desc    Get all products with filters
 // @access  Public
 router.get('/', getProducts);
+
+// @route   GET /api/products/search
+// @desc    Search products
+// @access  Public
+router.get('/search', searchProducts);
+
+// @route   GET /api/products/featured
+// @desc    Get featured products
+// @access  Public
+router.get('/featured', getFeaturedProducts);
+
+// @route   GET /api/products/category/:categorySlug
+// @desc    Get products by category
+// @access  Public
+router.get('/category/:categorySlug', getProductsByCategory);
 
 // @route   GET /api/products/:id
 // @desc    Get single product

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
+const pool = require('../config/db');
 const ApiResponse = require('../utils/ApiResponse');
 
 const prisma = new PrismaClient();
@@ -23,15 +24,39 @@ const protect = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        created_at: true
+    let user = null;
+
+    // First try to find user in Prisma User table (for /api/auth/login users)
+    try {
+      const prismaUser = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          created_at: true
+        }
+      });
+
+      if (prismaUser) {
+        user = prismaUser;
       }
-    });
+    } catch (error) {
+      // If Prisma fails, continue to PostgreSQL check
+    }
+
+    // If not found in Prisma, check in userquery table (PostgreSQL) for /api/users/login users
+    if (!user) {
+      try {
+        const result = await pool.query("SELECT id, name, email, mobile_number, city, created_at FROM userquery WHERE id = $1", [decoded.id]);
+
+        if (result.rows.length > 0) {
+          user = result.rows[0];
+        }
+      } catch (error) {
+        // If PostgreSQL also fails, user not found
+      }
+    }
 
     if (!user) {
       return ApiResponse.error(res, 'Not authorized, user not found', 401);
@@ -46,9 +71,10 @@ const protect = async (req, res, next) => {
 
 // Middleware to check admin role
 const admin = (req, res, next) => {
-  // For now, we'll check if the user email contains 'admin'
-  // This should be replaced with a proper role-based system
-  if (req.user && req.user.email && req.user.email.includes('admin')) {
+  // Check if the user email contains 'admin' or if they have admin role
+  // This works for both user systems
+  if (req.user && req.user.email &&
+      (req.user.email.includes('admin') || req.user.role === 'ADMIN')) {
     next();
   } else {
     return ApiResponse.error(res, 'Not authorized as admin', 403);
