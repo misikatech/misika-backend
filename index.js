@@ -12,6 +12,7 @@ const userApiRoutes = require('./routes/user.routes');
 const cartRoutes = require('./routes/cart.routes');
 const categoryRoutes = require('./routes/category.routes');
 const productRoutes = require('./routes/product.routes');
+const contactRoutes = require('./routes/contact.routes');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
@@ -92,6 +93,7 @@ app.use('/api/user', userApiRoutes); // This is for user profile/wishlist
 app.use('/api/cart', cartRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Add logging middleware to debug requests
 app.use((req, res, next) => {
@@ -111,6 +113,7 @@ app.get('/', (req, res) => {
       categories: '/api/categories',
       products: '/api/products',
       users: '/api/users',
+      contact: '/api/contact',
       stats: '/api/stats',
     },
   });
