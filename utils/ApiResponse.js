@@ -4,17 +4,22 @@ class ApiResponse {
       success: true,
       message,
       data,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     });
   }
 
-  static error(res, message = 'Error', statusCode = 500, errors = null) {
-    return res.status(statusCode).json({
+  static error(res, message = 'Error', statusCode = 500, stack = null) {
+    const response = {
       success: false,
       message,
-      errors,
-      timestamp: new Date().toISOString(),
-    });
+      timestamp: new Date().toISOString()
+    };
+
+    if (stack && process.env.NODE_ENV === 'development') {
+      response.stack = stack;
+    }
+
+    return res.status(statusCode).json(response);
   }
 }
 

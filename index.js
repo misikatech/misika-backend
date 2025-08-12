@@ -5,15 +5,17 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
+// Import routes
 const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/userRoutes');
+const userApiRoutes = require('./routes/user.routes');
+const cartRoutes = require('./routes/cart.routes');
 const categoryRoutes = require('./routes/category.routes');
 const productRoutes = require('./routes/product.routes');
-const userRoutes = require('./routes/userRoutes');
-const statsRoutes = require('./routes/stats.routes');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 // Security middleware
 app.use(helmet());
@@ -72,12 +74,30 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Placeholder image endpoints
+app.get('/api/placeholder/:width/:height', (req, res) => {
+  const { width, height } = req.params;
+  const color = req.query.color || 'cccccc';
+  const textColor = req.query.text || '666666';
+  const text = req.query.t || `${width}x${height}`;
+  
+  // Redirect to a placeholder service
+  res.redirect(`https://via.placeholder.com/${width}x${height}/${color}/${textColor}?text=${encodeURIComponent(text)}`);
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes); // This is for the OTP-based registration
+app.use('/api/user', userApiRoutes); // This is for user profile/wishlist
+app.use('/api/cart', cartRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/stats', statsRoutes);
+
+// Add logging middleware to debug requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`, req.body);
+  next();
+});
 
 // Root endpoint
 app.get('/', (req, res) => {

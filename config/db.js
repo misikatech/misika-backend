@@ -3,14 +3,10 @@ const { Pool } = require('pg');
 const isProduction = process.env.NODE_ENV === 'production';
 
 const pool = new Pool({
-  user: process.env.PGUSER,
-  host: process.env.PGHOST,
-  database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  port: process.env.PGPORT,
-  ssl: {
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? {
     rejectUnauthorized: false,
-  },
+  } : false,
 });
 
 pool.connect()

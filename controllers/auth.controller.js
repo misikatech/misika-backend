@@ -99,7 +99,12 @@ const login = asyncHandler(async (req, res) => {
 
   ApiResponse.success(
     res,
-    { user: userWithoutPassword, accessToken, refreshToken },
+    { 
+      user: userWithoutPassword, 
+      token: accessToken,  // Frontend expects 'token' not 'accessToken'
+      accessToken, 
+      refreshToken 
+    },
     'Login successful'
   );
 });

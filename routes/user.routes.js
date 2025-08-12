@@ -1,21 +1,29 @@
 const express = require('express');
 const { protect } = require('../middlewares/auth');
+const {
+  getProfile,
+  updateProfile,
+  getWishlist,
+  addToWishlist,
+  removeFromWishlist,
+  getOrders
+} = require('../controllers/user.controller');
 
 const router = express.Router();
 
 // All user routes require authentication
 router.use(protect);
 
-router.get('/profile', (req, res) => {
-  res.json({ success: true, message: 'User profile endpoint - to be implemented' });
-});
+// Profile routes
+router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
 
-router.put('/profile', (req, res) => {
-  res.json({ success: true, message: 'Update profile endpoint - to be implemented' });
-});
+// Wishlist routes
+router.get('/wishlist', getWishlist);
+router.post('/wishlist/:productId', addToWishlist);
+router.delete('/wishlist/:productId', removeFromWishlist);
 
-router.post('/change-password', (req, res) => {
-  res.json({ success: true, message: 'Change password endpoint - to be implemented' });
-});
+// Orders
+router.get('/orders', getOrders);
 
 module.exports = router;
